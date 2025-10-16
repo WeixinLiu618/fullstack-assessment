@@ -43,18 +43,33 @@ export default function Home() {
     string | undefined
   >(undefined);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data.categories));
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load categories');
+        return res.json();
+      })
+      .then((data) => setCategories(data.categories))
+      .catch((err) => {
+        console.error('Error fetching categories:', err);
+        setError('Failed to load categories. Please refresh the page.');
+      });
   }, []);
 
   useEffect(() => {
     if (selectedCategory) {
       fetch(`/api/subcategories?category=${encodeURIComponent(selectedCategory)}`)
-        .then((res) => res.json())
-        .then((data) => setSubCategories(data.subCategories));
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to load subcategories');
+          return res.json();
+        })
+        .then((data) => setSubCategories(data.subCategories))
+        .catch((err) => {
+          console.error('Error fetching subcategories:', err);
+          setSubCategories([]);
+        });
       // Clear subcategory when category changes
       setSelectedSubCategory(undefined);
     } else {
@@ -65,6 +80,7 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams();
     if (search) params.append("search", search);
     if (selectedCategory) params.append("category", selectedCategory);
@@ -72,9 +88,17 @@ export default function Home() {
     params.append("limit", "20");
 
     fetch(`/api/products?${params}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load products');
+        return res.json();
+      })
       .then((data) => {
         setProducts(data.products);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products. Please try again.');
         setLoading(false);
       });
   }, [search, selectedCategory, selectedSubCategory]);
@@ -151,7 +175,17 @@ export default function Home() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {loading ? (
+        {error ? (
+          <div className="text-center py-12">
+            <p className="text-red-500 mb-4">{error}</p>
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Loading products...</p>
           </div>
