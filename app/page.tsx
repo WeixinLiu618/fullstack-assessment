@@ -36,6 +36,7 @@ export default function Home() {
   const [categories, setCategories] = useState<string[]>([]);
   const [subCategories, setSubCategories] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
     undefined
   );
@@ -44,6 +45,15 @@ export default function Home() {
   >(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     fetch("/api/categories")
@@ -82,7 +92,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams();
-    if (search) params.append("search", search);
+    if (debouncedSearch) params.append("search", debouncedSearch);
     if (selectedCategory) params.append("category", selectedCategory);
     if (selectedSubCategory) params.append("subCategory", selectedSubCategory);
     params.append("limit", "20");
@@ -101,7 +111,7 @@ export default function Home() {
         setError('Failed to load products. Please try again.');
         setLoading(false);
       });
-  }, [search, selectedCategory, selectedSubCategory]);
+  }, [debouncedSearch, selectedCategory, selectedSubCategory]);
 
   return (
     <div className="min-h-screen bg-background">
