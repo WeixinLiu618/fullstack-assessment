@@ -52,9 +52,11 @@ export default function Home() {
 
   useEffect(() => {
     if (selectedCategory) {
-      fetch(`/api/subcategories`)
+      fetch(`/api/subcategories?category=${encodeURIComponent(selectedCategory)}`)
         .then((res) => res.json())
         .then((data) => setSubCategories(data.subCategories));
+      // Clear subcategory when category changes
+      setSelectedSubCategory(undefined);
     } else {
       setSubCategories([]);
       setSelectedSubCategory(undefined);
@@ -95,13 +97,14 @@ export default function Home() {
             </div>
 
             <Select
-              value={selectedCategory}
-              onValueChange={(value) => setSelectedCategory(value || undefined)}
+              value={selectedCategory || "all"}
+              onValueChange={(value) => setSelectedCategory(value === "all" ? undefined : value)}
             >
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat}
@@ -112,15 +115,16 @@ export default function Home() {
 
             {selectedCategory && subCategories.length > 0 && (
               <Select
-                value={selectedSubCategory}
+                value={selectedSubCategory || "all"}
                 onValueChange={(value) =>
-                  setSelectedSubCategory(value || undefined)
+                  setSelectedSubCategory(value === "all" ? undefined : value)
                 }
               >
                 <SelectTrigger className="w-full md:w-[200px]">
                   <SelectValue placeholder="All Subcategories" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">All Subcategories</SelectItem>
                   {subCategories.map((subCat) => (
                     <SelectItem key={subCat} value={subCat}>
                       {subCat}
